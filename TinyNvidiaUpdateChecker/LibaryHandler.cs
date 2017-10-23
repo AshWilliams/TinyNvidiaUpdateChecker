@@ -12,17 +12,20 @@ namespace TinyNvidiaUpdateChecker
         public enum Libary
         {
             SEVENZIP,
-            WINRAR
+            WINRAR,
+            PEAZIP
         }
 
         public static LibaryFile EvaluateLibary() {
             LibaryFile WinRAR = CheckWinRAR(); // CheckWinRAR
             LibaryFile SevenZip = Check7Zip(); // Check7Zip
-
+            LibaryFile PeaZip = CheckPeaZip();
             if (WinRAR.IsInstalled()) {
                 return WinRAR;
             } else if (SevenZip.IsInstalled()) {
-                return SevenZip;
+                return SevenZip;            
+            } else if (PeaZip.IsInstalled()) {
+                return PeaZip;
             } else {
                 return null;
             }
@@ -44,6 +47,26 @@ namespace TinyNvidiaUpdateChecker
             }
             catch (Exception) { }
 
+            return new LibaryFile(false);
+        }
+
+        private static LibaryFile CheckPeaZip()
+        {
+            if (Directory.Exists("PeaZip"))
+            {
+                LogManager.Log("PeaZip path: " + Path.GetFullPath("PeaZip") + @"\", LogManager.Level.INFO);
+                return new LibaryFile(Path.GetFullPath("PeaZip") + @"\", Libary.PEAZIP, true);
+            }
+            //
+            try
+            {
+                using (RegistryKey regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{5A2BC38A-406C-4A5B-BF45-6991F9A05325}_is1", false))
+                {
+                    LogManager.Log("PeaZip path: " + regKey.GetValue("InstallLocation").ToString(), LogManager.Level.INFO);
+                    return new LibaryFile(regKey.GetValue("InstallLocation").ToString(), Libary.PEAZIP, true);
+                }
+            }
+            catch (Exception) { }
             return new LibaryFile(false);
         }
 
